@@ -1,6 +1,6 @@
-# GenEvA – **Gen**e **Ev**idence *A*pp
+# GenEvA
 
-GenEva is a web application that explores potential correlations between genes and diseases using public life sciences data and LLM analysis.  
+GenEvA (**Gen**e **Ev**idence **A**pp) is a web application that explores potential correlations between genes and diseases using public life sciences data and LLM analysis.  
 
 ## Run locally
 
