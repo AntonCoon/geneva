@@ -1,7 +1,12 @@
 import pytest
 
-from geneva.model import (SQLModel, create_user, engine, get_user_by_name,
-                          user_exists)
+from geneva.model import (
+    SQLModel,
+    create_user,
+    engine,
+    get_user_by_name,
+    user_exists,
+)
 
 
 @pytest.fixture(autouse=True)

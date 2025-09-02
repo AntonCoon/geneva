@@ -21,6 +21,9 @@ packages = [{include = "geneva", from = "src"}]
 [tool.black]
 line-length = 79
 
+[tool.isort]
+profile = "black"
+
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 isort = "^6.0.1"
