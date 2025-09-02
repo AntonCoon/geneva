@@ -1,3 +1,6 @@
+import json
+from datetime import datetime
+
 import pytest
 
 from geneva.model import (
@@ -5,6 +8,8 @@ from geneva.model import (
     create_user,
     engine,
     get_user_by_name,
+    get_user_queries,
+    save_user_query,
     user_exists,
 )
 
@@ -34,3 +39,31 @@ class TestUserModel:
         assert not user_exists("carol")
         create_user("carol", "key789")
         assert user_exists("carol")
+
+
+class TestUserQueryModel:
+    def test_save_and_get_user_query(self):
+        user = create_user("dave", "key001")
+        response_data = {"some": "result", "value": 42}
+        save_user_query(user.id, "TP53", "cancer", response_data)
+
+        queries = get_user_queries(user.id)
+        assert len(queries) == 1
+        uq = queries[0]
+        assert uq.user_id == user.id
+        assert uq.gene == "TP53"
+        assert uq.disease == "cancer"
+        assert isinstance(uq.service_response, str)
+        # Optional: check that JSON can be loaded
+        loaded = json.loads(uq.service_response)
+        assert loaded == response_data
+
+    def test_timestamp_set(self):
+        user = create_user("eve", "key002")
+        response_data = {"test": True}
+        save_user_query(user.id, "BRCA1", "breast cancer", response_data)
+
+        queries = get_user_queries(user.id)
+        uq = queries[0]
+        assert isinstance(uq.created_at, datetime)
+        assert uq.created_at <= datetime.now()
