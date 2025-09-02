@@ -29,5 +29,8 @@ jobs:
           poetry run isort --check-only src tests
           poetry run flake8 src tests
 
+      - name: Create data folder
+        run: mkdir -p data
+
       - name: Run tests
         run: poetry run pytest tests/

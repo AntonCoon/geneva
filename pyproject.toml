@@ -10,16 +10,26 @@ requires-python = ">=3.12"
 dependencies = [
     "pytest (>=8.4.1,<9.0.0)",
     "uvicorn[standard] (>=0.35.0,<0.36.0)",
-    "fastapi[standard] (>=0.116.1,<0.117.0)"
+    "fastapi[standard] (>=0.116.1,<0.117.0)",
+    "sqlmodel (>=0.0.24,<0.0.25)",
+    "sqlite-utils (>=3.38,<4.0)"
 ]
 
 [tool.poetry]
 packages = [{include = "geneva", from = "src"}]
 
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 isort = "^6.0.1"
 flake8 = "^7.3.0"
+pytest = "^8.4.1"
+httpx = "^0.28.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
