@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -18,6 +19,7 @@ class UserQuery(SQLModel, table=True):
     gene: str
     disease: str
     service_response: str
+    llm_response: Optional[str] = None
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -47,16 +49,19 @@ def user_exists(username: str) -> bool:
 
 
 def save_user_query(
-    user_id: int, gene: str, disease: str, response: dict
+    user_id: int,
+    gene: str,
+    disease: str,
+    service_response: dict,
+    llm_response: Optional[dict] = None,
 ) -> UserQuery:
-    import json
-
     with Session(engine) as session:
         query = UserQuery(
             user_id=user_id,
             gene=gene,
             disease=disease,
-            service_response=json.dumps(response),
+            service_response=json.dumps(service_response),
+            llm_response=json.dumps(llm_response) if llm_response else None,
         )
         session.add(query)
         session.commit()

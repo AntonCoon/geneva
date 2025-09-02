@@ -74,9 +74,16 @@ class TestQueries:
         def fake_fetch_association(self, gene, disease):
             return {"summary": f"{gene}-{disease}-association"}
 
+        def fake_summarize_gene_disease(self, data, additional_context=None):
+            return {"summary_text": f"LLM summary for {data['summary']}"}
+
         monkeypatch.setattr(
             "geneva.main.OpenTargetService.fetch_association",
             fake_fetch_association,
+        )
+        monkeypatch.setattr(
+            "geneva.main.OpenRouterService.summarize_gene_disease",
+            fake_summarize_gene_disease,
         )
 
         response = client.post(
@@ -89,7 +96,13 @@ class TestQueries:
         data = body["data"]
         assert data["gene"] == "BRCA1"
         assert data["disease"] == "cancer"
-        assert data["response"]["summary"] == "BRCA1-cancer-association"
+        assert (
+            data["service_response"]["summary"] == "BRCA1-cancer-association"
+        )
+        assert (
+            data["llm_response"]["summary_text"]
+            == "LLM summary for BRCA1-cancer-association"
+        )
 
     def test_run_query_for_nonexistent_user(self):
         response = client.post(
@@ -106,9 +119,16 @@ class TestQueries:
         def fake_fetch_association(self, gene, disease):
             return {"summary": f"{gene}-{disease}-association"}
 
+        def fake_summarize_gene_disease(self, data, additional_context=None):
+            return {"summary_text": f"LLM summary for {data['summary']}"}
+
         monkeypatch.setattr(
             "geneva.main.OpenTargetService.fetch_association",
             fake_fetch_association,
+        )
+        monkeypatch.setattr(
+            "geneva.main.OpenRouterService.summarize_gene_disease",
+            fake_summarize_gene_disease,
         )
 
         client.post(
@@ -129,6 +149,9 @@ class TestQueries:
         assert len(data) == 2
         genes = {q["gene"] for q in data}
         assert genes == {"BRCA1", "TP53"}
+        for q in data:
+            assert "service_response" in q
+            assert "llm_response" in q
 
     def test_list_queries_for_nonexistent_user(self):
         response = client.get("/queries/nope")
