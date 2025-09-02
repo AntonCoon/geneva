@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -10,13 +11,14 @@ from .model import (
     get_user_queries,
     save_user_query,
 )
+from .services.openrouter import OpenRouterService
 from .services.opentarget import OpenTargetService
 from .utils import error, success
 
 
 class LoginRequest(BaseModel):
     username: str
-    api_key: str | None = None
+    api_key: Optional[str] = None
 
 
 class GeneDiseaseRequest(BaseModel):
@@ -72,24 +74,41 @@ def run_gene_disease_query(request: GeneDiseaseRequest):
     user = get_user_by_name(request.username)
     if not user:
         return error("User not found", status_code=404)
-    service = OpenTargetService()
+
+    target_service = OpenTargetService()
     try:
-        response = service.fetch_association(request.gene, request.disease)
+        service_response = target_service.fetch_association(
+            request.gene, request.disease
+        )
     except Exception as e:
-        return error(f"Service error: {str(e)}", status_code=500)
+        return error(f"OpenTargetService error: {str(e)}", status_code=500)
+
+    llm_service = OpenRouterService(api_key=user.api_key)
+    try:
+        llm_response = llm_service.summarize_gene_disease(service_response)
+    except Exception as e:
+        llm_response = {
+            "summary_text": f"LLM error: {str(e)}",
+            "key_findings": [],
+            "confidence": None,
+        }
+
     saved = save_user_query(
         user_id=user.id,
         gene=request.gene,
         disease=request.disease,
-        response=response,
+        service_response=service_response,
+        llm_response=llm_response,
     )
+
     return success(
         "Query executed successfully",
         {
             "id": saved.id,
             "gene": saved.gene,
             "disease": saved.disease,
-            "response": response,
+            "service_response": service_response,
+            "llm_response": llm_response,
             "created_at": saved.created_at.isoformat(),
         },
     )
@@ -100,6 +119,7 @@ def list_user_queries(username: str):
     user = get_user_by_name(username)
     if not user:
         return error("User not found", status_code=404)
+
     queries = get_user_queries(user.id)
     return success(
         "User queries retrieved",
@@ -108,7 +128,8 @@ def list_user_queries(username: str):
                 "id": q.id,
                 "gene": q.gene,
                 "disease": q.disease,
-                "response": q.service_response,
+                "service_response": q.service_response,
+                "llm_response": q.llm_response,
                 "created_at": q.created_at.isoformat(),
             }
             for q in queries
