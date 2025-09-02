@@ -6,14 +6,6 @@ from geneva.main import app
 client = TestClient(app)
 
 
-def test_root():
-    response = client.get("/")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "success"
-    assert data["message"] == "GenEvA is running!"
-
-
 @pytest.fixture(autouse=True)
 def reset_db():
     from geneva.model import SQLModel, engine
@@ -21,6 +13,14 @@ def reset_db():
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     yield
+
+
+def test_root():
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["message"] == "GenEvA is running!"
 
 
 class TestAuth:
@@ -65,3 +65,73 @@ class TestAuth:
         response = client.get("/user/not_exists")
         assert response.status_code == 404
         assert response.json()["status"] == "error"
+
+
+class TestQueries:
+    def test_run_query_and_store_result(self, monkeypatch):
+        client.post("/login", json={"username": "alice", "api_key": "key123"})
+
+        def fake_fetch_association(self, gene, disease):
+            return {"summary": f"{gene}-{disease}-association"}
+
+        monkeypatch.setattr(
+            "geneva.main.OpenTargetService.fetch_association",
+            fake_fetch_association,
+        )
+
+        response = client.post(
+            "/query",
+            json={"username": "alice", "gene": "BRCA1", "disease": "cancer"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "success"
+        data = body["data"]
+        assert data["gene"] == "BRCA1"
+        assert data["disease"] == "cancer"
+        assert data["response"]["summary"] == "BRCA1-cancer-association"
+
+    def test_run_query_for_nonexistent_user(self):
+        response = client.post(
+            "/query",
+            json={"username": "ghost", "gene": "TP53", "disease": "cancer"},
+        )
+        assert response.status_code == 404
+        body = response.json()
+        assert body["status"] == "error"
+
+    def test_list_user_queries(self, monkeypatch):
+        client.post("/login", json={"username": "bob", "api_key": "key123"})
+
+        def fake_fetch_association(self, gene, disease):
+            return {"summary": f"{gene}-{disease}-association"}
+
+        monkeypatch.setattr(
+            "geneva.main.OpenTargetService.fetch_association",
+            fake_fetch_association,
+        )
+
+        client.post(
+            "/query",
+            json={"username": "bob", "gene": "BRCA1", "disease": "cancer"},
+        )
+        client.post(
+            "/query",
+            json={"username": "bob", "gene": "TP53", "disease": "leukemia"},
+        )
+
+        response = client.get("/queries/bob")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "success"
+        data = body["data"]
+        assert isinstance(data, list)
+        assert len(data) == 2
+        genes = {q["gene"] for q in data}
+        assert genes == {"BRCA1", "TP53"}
+
+    def test_list_queries_for_nonexistent_user(self):
+        response = client.get("/queries/nope")
+        assert response.status_code == 404
+        body = response.json()
+        assert body["status"] == "error"
