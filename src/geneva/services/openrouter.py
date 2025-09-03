@@ -52,7 +52,15 @@ class OpenRouterService(LLMService):
         response_text = self._ask_model(prompt)
 
         try:
+            if response_text.startswith("```"):
+                response_text = "\n".join(response_text.splitlines()[1:-1])
+
             summary_json = json.loads(response_text)
+
+            summary_json.setdefault("summary_text", "")
+            summary_json.setdefault("key_findings", [])
+            summary_json.setdefault("confidence", None)
+
         except json.JSONDecodeError:
             summary_json = {
                 "summary_text": response_text,

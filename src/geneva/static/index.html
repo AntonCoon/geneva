@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geneva - Gene Disease Association</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>🔬 Geneva: Gene-Disease Association Explorer</h1>
+  </header>
+
+  <main>
+    <!-- Login -->
+    <section id="login-section">
+      <h2>Login</h2>
+      <input id="username" type="text" placeholder="Username">
+      <input id="api_key" type="text" placeholder="API Key (optional)">
+      <button onclick="login()">Login</button>
+      <p id="login-message"></p>
+    </section>
+
+    <!-- Create query -->
+    <section id="association-section">
+      <h2>Run Gene–Disease Query</h2>
+      <input id="gene" type="text" placeholder="Gene">
+      <input id="disease" type="text" placeholder="Disease">
+      <button onclick="createQuery()">Fetch</button>
+
+      <!-- LLM summary -->
+      <div id="llm-summary" style="margin-top: 1rem;">
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <h3>Summary</h3>
+          <span id="confidence" style="
+              background:#2b3d52;
+              color:white;
+              padding:0.2rem 0.5rem;
+              border-radius:4px;
+              font-weight:bold;
+              font-size:0.9rem;
+          "></span>
+        </div>
+        <p id="summary-text"></p>
+        <ul id="key-findings"></ul>
+      </div>
+
+      <!-- Foldable service response -->
+      <details id="service-details" style="margin-top: 1rem;">
+        <summary style="cursor:pointer; font-weight:bold;">🔍 Show full service response</summary>
+        <pre id="service-json" style="max-height: 400px; overflow-x:auto;"></pre>
+      </details>
+
+      <pre id="association-result" style="display:none;"></pre>
+    </section>
+
+    <!-- User history -->
+    <section id="history-section">
+      <h2>My Queries</h2>
+      <button onclick="loadQueries()">Load My Queries</button>
+      <div id="history"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Geneva © 2025</p>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
