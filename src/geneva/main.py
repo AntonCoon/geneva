@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .model import (
@@ -36,9 +39,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
+static_path = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+
 @app.get("/")
 async def root():
     return success("GenEvA is running!")
+
+
+@app.get("/app")
+def serve_frontend():
+    index_file = static_path / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "Frontend not found"}
 
 
 @app.post("/login")
