@@ -7,6 +7,18 @@ GenEvA (**Gen**e **Ev**idence **A**pp) is a web application that explores potent
 - Provides structured JSON output for downstream applications  
 - Easy setup with Docker  
 
+## Usage
+
+Below is an example of how to interact with GenEvA:  
+
+![GenEvA in action](./attachments/geneva_usecase.gif)  
+
+### Steps
+1. **Register** with your name and provide your **OpenRouter token** (required for LLM queries).  
+2. **Search associations** between genes and diseases using the web interface.  
+3. **View history** of your past requests, which is stored for your session.  
+
+
 ## Setup & Running
 **Step 1: Clone the repository**  
 ```bash
